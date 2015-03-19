@@ -1,8 +1,4 @@
 #! /bin/bash
-## Author: Nicholas Alipaz
-## Contact: http://nicholas.alipaz.net/
-## Description: Adjust screen brightness using xrandr. This is useful when hardware might
-##   not support adjusting the screen brightness, like with an external monitor.
 
 # Help
 if [ -z $1 ] || [ $1 == "--help" ] || [ $1 == "-h" ] || [[ $1 == -* ]]; then
@@ -107,3 +103,4 @@ else
 	notify-send " " -i notification-display-brightness -h int:value:$new_brightness_percent -h string:x-canonical-private-synchronous:brightness
 fi
 exit
+
