@@ -1,0 +1,109 @@
+#! /bin/bash
+## Author: Nicholas Alipaz
+## Contact: http://nicholas.alipaz.net/
+## Description: Adjust screen brightness using xrandr. This is useful when hardware might
+##   not support adjusting the screen brightness, like with an external monitor.
+
+# Help
+if [ -z $1 ] || [ $1 == "--help" ] || [ $1 == "-h" ] || [[ $1 == -* ]]; then
+	case $1 in
+		-h|--help)
+				echo "Usage:
+  adjust-brightness ACTION [OPTIONS]
+
+Help Options:
+  -h, --help      Show this help
+
+Available Actions:
+  up              Adjust brightness up
+  down            Adjust brightness down
+  restore         Restore brightness to the last configuration.
+  reset           Reset brightness to 100% and remove all configuration files.
+
+Application Options:
+  -q, --quiet     Don't show notifications
+"			;;
+		*)
+			adjust-brightness --help
+			;;
+	esac
+	exit
+fi
+
+# Main functions
+config_path=~/.brightness
+[ -d "$config_path" ] || mkdir "$config_path"
+
+screens="$(xrandr -q |grep " connected"| cut -d ' ' -f1)"
+action="$1"
+shift
+
+# Deal with main action.
+for s in $screens; do
+	if [ ! -f "$config_path/$s" ]; then
+		current_brightness="1.00"
+	else
+		current_brightness=`cat ~/.brightness/$s`
+	fi
+
+	case $action in
+		up)
+			if [ "$current_brightness" == "1.00" ]; then
+				new_brightness="1.00"
+			else
+				new_brightness="$(echo "$current_brightness + .10" | bc)"
+			fi
+			;;
+		down)
+			if [ "$current_brightness" == "0" ]; then
+				new_brightness="0"
+			else
+				new_brightness="$(echo "$current_brightness - .10" | bc)"
+			fi
+			;;
+		restore)
+			if [ -z "$first_display_brightness" ]; then
+				first_display_brightness="$current_brightness"
+			fi
+			new_brightness="$first_display_brightness"
+			;;
+		reset)
+			if [ -d "$config_path" ]; then
+				rm -rf "$config_path"
+			fi
+			new_brightness="1.00"
+			xrandr --output $s --brightness $new_brightness
+			exit
+			;;
+	esac
+
+	xrandr --output $s --brightness $new_brightness
+	echo $new_brightness > "$config_path/$s"
+	new_brightness_percent="$(echo "$new_brightness * 100" | bc)"
+	new_brightness_percent=${new_brightness_percent%.*}
+done
+
+# Any other arguments.
+while [[ $# > 0 ]]; do
+	key=$1
+
+	case $key in
+		-q|--quiet)
+			# if quiet was requested, no notifications should be sent, so just exit now.
+			exit
+			;;
+		*)
+			echo "Unknown option provided, you should fix that."
+			;;
+	esac
+done
+
+# Notification.
+# If notify-osd is installed we can do a progress bar type notification, otherwise text-based.
+osd="$(dpkg -s notify-osd | grep "Status.*installed")"
+if [ -n "$osd" ]; then
+	notify-send "Screen Brightness" "Screen brightness now set to $new_brightness_percent%" -i notification-display-brightness -h string:x-canonical-private-synchronous:brightness
+else
+	notify-send " " -i notification-display-brightness -h int:value:$new_brightness_percent -h string:x-canonical-private-synchronous:brightness
+fi
+exit
