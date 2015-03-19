@@ -101,7 +101,7 @@ done
 # Notification.
 # If notify-osd is installed we can do a progress bar type notification, otherwise text-based.
 osd="$(dpkg -s notify-osd | grep "Status.*installed")"
-if [ -n "$osd" ]; then
+if [ -z "$osd" ]; then
 	notify-send "Screen Brightness" "Screen brightness now set to $new_brightness_percent%" -i notification-display-brightness -h string:x-canonical-private-synchronous:brightness
 else
 	notify-send " " -i notification-display-brightness -h int:value:$new_brightness_percent -h string:x-canonical-private-synchronous:brightness
