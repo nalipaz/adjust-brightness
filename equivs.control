@@ -1,0 +1,13 @@
+Section: misc
+Priority: optional
+Homepage: https://github.com/nalipaz/xrandr-adjust-brightness
+Standards-Version: 3.9.2
+Package: xrandr-adjust-brightness
+Version: 1.0
+Maintainer: Nicholas Alipaz <nicholas@alipaz.net>
+Depends: 
+Architecture: all
+Changelog: debian/changelog
+Readme: README.md
+Files: xrandr-adjust-brightness /usr/bin/ 
+Description: Adjust brightness of all displays using xrandr
